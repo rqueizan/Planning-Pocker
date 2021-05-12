@@ -1,7 +1,8 @@
-﻿using MediatR;
+﻿using AutoMapper.QueryableExtensions;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Planning.Pocker.Api.NoAuth.Data;
 using Planning.Pocker.Api.NoAuth.Dtos;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,14 +14,9 @@ namespace Planning.Pocker.Api.NoAuth.Handlers
     {
         private readonly ApiDbContext context;
 
-        public ListarCartasHandler(ApiDbContext context)
-        {
-            this.context = context;
-        }
+        public ListarCartasHandler(ApiDbContext context) => this.context = context;
 
         public async Task<List<DtoCarta>> Handle(ListarCartasQuery request, CancellationToken cancellationToken)
-        {
-            return await Task.FromResult(new DtoCarta[] { new DtoCarta { Id = Guid.NewGuid(), Valor = 20 } }.ToList()).ConfigureAwait(false);
-        }
+            => await context.Carta.OrderByDescending(c => c.Valor).ProjectTo<DtoCarta>(MapperConfigurationRepository.Default).ToListAsync().ConfigureAwait(false);
     }
 }
