@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Planning.Pocker.Api.NoAuth.Model
+namespace Planning.Pocker.Api.NoAuth.Dtos
 {
-    public class Carta
+    public class DtoCarta
     {
         public Guid Id { get; set; }
 

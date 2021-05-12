@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Planning.Pocker.Api.NoAuth
+namespace Planning.Pocker.Api.NoAuth.Model
 {
     public class Usuario
     {
         public Guid Id { get; set; }
 
-        public Guid Nombre { get; set; }
+        public string Nombre { get; set; }
     }
 }

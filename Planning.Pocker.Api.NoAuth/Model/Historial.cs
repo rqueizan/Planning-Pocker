@@ -2,10 +2,10 @@
 
 namespace Planning.Pocker.Api.NoAuth.Model
 {
-    public class Carta
+    public class Historial
     {
         public Guid Id { get; set; }
 
-        public int Valor { get; set; }
+        public string Descripcion { get; set; }
     }
 }

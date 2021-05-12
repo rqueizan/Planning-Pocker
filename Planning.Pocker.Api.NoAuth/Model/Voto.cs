@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Planning.Pocker.Api.NoAuth
+namespace Planning.Pocker.Api.NoAuth.Model
 {
     public class Voto
     {
@@ -12,10 +12,10 @@ namespace Planning.Pocker.Api.NoAuth
 
         public Carta Carta { get; set; }
 
-        public Guid TarjetaId { get; set; }
+        public Guid CartaId { get; set; }
 
-        public HistorialUsuario HistorialUsuario { get; set; }
+        public Historial Historial { get; set; }
 
-        public Guid HistorialUsuarioId { get; set; }
+        public Guid HistorialId { get; set; }
     }
 }
