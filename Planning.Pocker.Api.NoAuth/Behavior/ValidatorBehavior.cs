@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Planning.Pocker.Api.NoAuth.PipeLines
+namespace Planning.Pocker.Api.NoAuth.Behavior
 {
     public class ValidatorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     {
