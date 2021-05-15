@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -53,9 +51,46 @@ namespace Planning.Pocker.Api.Test
         {
             try
             {
-                var command = new UpdateCartaCommand { Id = carta.Id, Valor = 6 };
-                var response = await integrationTestServer.PutAsync($"https://localhost:44307/api/Cartas/{carta.Id}", command);
+                carta.Valor = 6;
+                var command = new UpdateCartaCommand { Id = carta.Id, Valor = carta.Valor };
+                var response = await integrationTestServer.PutAsync($"/api/Cartas/{carta.Id}", command);
                 Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                output.WriteLine(ex.GetType().FullName);
+                output.WriteLine(ex.Message);
+                output.WriteLine(ex.StackTrace);
+            }
+        }
+
+        [Fact, Priority(3, Orderer.Random)]
+        public async Task Should_Get_Cartas()
+        {
+            try
+            {
+                var response = await integrationTestServer.GetAsync<List<DtoCarta>>($"/api/Cartas");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.NotEmpty(response.Data);
+                Assert.NotNull(response.Data.FirstOrDefault(c => c.Id == carta.Id && c.Valor == carta.Valor));
+            }
+            catch (Exception ex)
+            {
+                output.WriteLine(ex.GetType().FullName);
+                output.WriteLine(ex.Message);
+                output.WriteLine(ex.StackTrace);
+            }
+        }
+
+        [Fact, Priority(3)]
+        public async Task Should_Get_Cartas_With_Filters()
+        {
+            try
+            {
+                var command = new ListarCartasQuery { Min = 7, Max = 9 };
+                var response = await integrationTestServer.GetAsync<List<DtoCarta>>($"/api/Cartas{command.Filter()}");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.Contains(response.Data, c => command.Min <= c.Valor && c.Valor <= command.Max);
             }
             catch (Exception ex)
             {
