@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Planning.Pocker.Api.NoAuth.Dtos;
 using Planning.Pocker.Api.NoAuth.Handlers;
-using Planning.Pocker.Api.NoAuth.Model;
 using System;
 using System.Collections.Generic;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace Planning.Pocker.Api.NoAuth.Controllers
@@ -20,14 +20,14 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
 
         // GET: api/Historial
         [HttpGet]
-        [Produces("application/json")]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoHistorial>))]
         public async Task<ActionResult<IEnumerable<DtoHistorial>>> GetHistorial([FromQuery] ListarHistorialesQuery listarHistorial)
             => await mediator.Send(listarHistorial).ConfigureAwait(false);
 
         // GET: api/Historial/5
         [HttpGet("{id}")]
-        [Produces("application/json")]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoHistorial))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<DtoHistorial>> GetHistorial(Guid id)
@@ -39,7 +39,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         // PUT: api/Historial/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        [Consumes("application/json")]
+        [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -49,8 +49,8 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         // POST: api/Historial
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Consumes("application/json")]
-        [Produces("application/json")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoHistorial))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<DtoHistorial>> PostHistorialUsuario([FromBody] CreateHistorialCommand createHistorial)

@@ -5,6 +5,7 @@ using Planning.Pocker.Api.NoAuth.Dtos;
 using Planning.Pocker.Api.NoAuth.Handlers;
 using System;
 using System.Collections.Generic;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace Planning.Pocker.Api.NoAuth.Controllers
@@ -19,14 +20,14 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
 
         // GET: api/Cartas
         [HttpGet]
-        [Produces("application/json")]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoCarta>))]
         public async Task<ActionResult<IEnumerable<DtoCarta>>> GetCarta([FromQuery] ListarCartasQuery listarCartas)
             => await mediator.Send(listarCartas).ConfigureAwait(false);
 
         // GET: api/Cartas/5
         [HttpGet("{id}")]
-        [Produces("application/json")]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoCarta))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<DtoCarta>> GetCarta(Guid id)
@@ -38,7 +39,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         // PUT: api/Cartas/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{validationId}")]
-        [Consumes("application/json")]
+        [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -48,8 +49,8 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         // POST: api/Cartas
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Consumes("application/json")]
-        [Produces("application/json")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoCarta))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<DtoCarta>> PostCarta([FromBody] CreateCartaCommand createCarta)
