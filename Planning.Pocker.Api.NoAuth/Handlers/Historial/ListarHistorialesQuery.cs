@@ -6,12 +6,9 @@ using System.Runtime.Serialization;
 namespace Planning.Pocker.Api.NoAuth.Handlers
 {
     [DataContract]
-    public class ListarCartasQuery : IRequest<List<DtoCarta>>
+    public class ListarHistorialesQuery : IRequest<List<DtoHistorial>>
     {
         [DataMember]
-        public int Min { get; set; }
-
-        [DataMember]
-        public int Max { get; set; }
+        public string Descripcion { get; set; }
     }
 }

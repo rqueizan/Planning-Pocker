@@ -5,11 +5,11 @@ using System.Runtime.Serialization;
 namespace Planning.Pocker.Api.NoAuth.Handlers
 {
     [DataContract]
-    public class DeleteCartaCommand : IRequest<int>
+    public class DeleteHistorialCommand : IRequest<int>
     {
         [DataMember]
         public Guid Id { get; private set; }
 
-        public DeleteCartaCommand(Guid id) => Id = id;
+        public DeleteHistorialCommand(Guid id) => Id = id;
     }
 }

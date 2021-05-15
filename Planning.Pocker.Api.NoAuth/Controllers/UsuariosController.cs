@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Planning.Pocker.Api.NoAuth;
 using Planning.Pocker.Api.NoAuth.Data;
+using Planning.Pocker.Api.NoAuth.Dtos;
+using Planning.Pocker.Api.NoAuth.Handlers;
 using Planning.Pocker.Api.NoAuth.Model;
 
 namespace Planning.Pocker.Api.NoAuth.Controllers
@@ -15,95 +18,56 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
     [ApiController]
     public class UsuariosController : ControllerBase
     {
-        private readonly ApiDbContext _context;
+        private readonly IMediator mediator;
 
-        public UsuariosController(ApiDbContext context)
-        {
-            _context = context;
-        }
+        public UsuariosController(IMediator mediator) => this.mediator = mediator;
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuario()
-        {
-            return await _context.Usuario.ToListAsync();
-        }
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoUsuario>))]
+        public async Task<ActionResult<IEnumerable<DtoUsuario>>> GetUsuario([FromQuery] ListarUsuariosQuery listarUsuario) 
+            => await mediator.Send(listarUsuario).ConfigureAwait(false);
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(Guid id)
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoUsuario))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DtoUsuario>> GetUsuario(Guid id)
         {
-            var usuario = await _context.Usuario.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            return usuario;
+            var usuario = await mediator.Send(new GetUsuarioQuery(id)).ConfigureAwait(false);
+            return usuario is null ? NotFound() : usuario;
         }
 
         // PUT: api/Usuarios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(Guid id, Usuario usuario)
-        {
-            if (id != usuario.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(usuario).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
+        [Consumes("application/json")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PutUsuario([FromRoute] Guid validationId, UpdateUsuarioCommand updateUsuario)
+            => StatusCode(await mediator.Send(updateUsuario.SetValidationId(validationId)).ConfigureAwait(false));
 
         // POST: api/Usuarios
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        [Consumes("application/json")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoUsuario))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<DtoUsuario>> PostUsuario([FromBody] CreateUsuarioCommand createUsuario)
         {
-            _context.Usuario.Add(usuario);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUsuario", new { id = usuario.Id }, usuario);
+            var dtoUsuario = await mediator.Send(createUsuario).ConfigureAwait(false);
+            return CreatedAtAction($"{nameof(UsuariosController.GetUsuario)}", new { id = dtoUsuario.Id }, dtoUsuario);
         }
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuario(Guid id)
-        {
-            var usuario = await _context.Usuario.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuario.Remove(usuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UsuarioExists(Guid id)
-        {
-            return _context.Usuario.Any(e => e.Id == id);
-        }
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteUsuario([FromRoute] Guid id) 
+            => StatusCode(await mediator.Send(new DeleteUsuarioCommand(id)).ConfigureAwait(false));
     }
 }

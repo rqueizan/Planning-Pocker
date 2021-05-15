@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Bogus;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Planning.Pocker.Api.NoAuth;
-using Planning.Pocker.Api.NoAuth.Data;
+using Planning.Pocker.Api.NoAuth.Dtos;
+using Planning.Pocker.Api.NoAuth.Handlers;
 using Planning.Pocker.Api.NoAuth.Model;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Planning.Pocker.Api.NoAuth.Controllers
 {
@@ -16,95 +14,56 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
     [ApiController]
     public class HistorialController : ControllerBase
     {
-        private readonly ApiDbContext _context;
+        private readonly IMediator mediator;
 
-        public HistorialController(ApiDbContext context)
-        {
-            _context = context;
-        }
+        public HistorialController(IMediator mediator) => this.mediator = mediator;
 
-        // GET: api/HistorialUsuarios
+        // GET: api/Historial
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Historial>>> GetHistorialUsuario()
-        {
-            return await _context.Historial.ToListAsync();
-        }
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoHistorial>))]
+        public async Task<ActionResult<IEnumerable<DtoHistorial>>> GetHistorial([FromQuery] ListarHistorialesQuery listarHistorial)
+            => await mediator.Send(listarHistorial).ConfigureAwait(false);
 
-        // GET: api/HistorialUsuarios/5
+        // GET: api/Historial/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Historial>> GetHistorialUsuario(Guid id)
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoHistorial))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DtoHistorial>> GetHistorial(Guid id)
         {
-            var historialUsuario = await _context.Historial.FindAsync(id);
-
-            if (historialUsuario == null)
-            {
-                return NotFound();
-            }
-
-            return historialUsuario;
+            var historial = await mediator.Send(new GetHistorialQuery(id)).ConfigureAwait(false);
+            return historial is null ? NotFound() : historial;
         }
 
-        // PUT: api/HistorialUsuarios/5
+        // PUT: api/Historial/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutHistorialUsuario(Guid id, Historial historialUsuario)
-        {
-            if (id != historialUsuario.Id)
-            {
-                return BadRequest();
-            }
+        [Consumes("application/json")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PutHistorialUsuario([FromRoute] Guid validationId, UpdateHistorialCommand updateHistorial)
+                => StatusCode(await mediator.Send(updateHistorial.SetValidationId(validationId)).ConfigureAwait(false));
 
-            _context.Entry(historialUsuario).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!HistorialUsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/HistorialUsuarios
+        // POST: api/Historial
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Historial>> PostHistorialUsuario(Historial historialUsuario)
+        [Consumes("application/json")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoHistorial))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<DtoHistorial>> PostHistorialUsuario([FromBody] CreateHistorialCommand createHistorial)
         {
-            _context.Historial.Add(historialUsuario);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetHistorialUsuario", new { id = historialUsuario.Id }, historialUsuario);
+            var dtoHistorial = await mediator.Send(createHistorial).ConfigureAwait(false);
+            return CreatedAtAction($"{nameof(HistorialController.GetHistorial)}", new { id = dtoHistorial.Id }, dtoHistorial);
         }
 
-        // DELETE: api/HistorialUsuarios/5
+        // DELETE: api/Historial/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteHistorialUsuario(Guid id)
-        {
-            var historialUsuario = await _context.Historial.FindAsync(id);
-            if (historialUsuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Historial.Remove(historialUsuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool HistorialUsuarioExists(Guid id)
-        {
-            return _context.Historial.Any(e => e.Id == id);
-        }
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteHistorial([FromRoute] Guid id)
+            => StatusCode(await mediator.Send(new DeleteHistorialCommand(id)).ConfigureAwait(false));
     }
 }

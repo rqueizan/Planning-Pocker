@@ -22,7 +22,7 @@ namespace Planning.Pocker.Api.NoAuth.Handlers
                 cartas = cartas.Where(c => c.Valor >= request.Min);
             if (request.Max != 0)
                 cartas = cartas.Where(c => c.Valor <= request.Max);
-            return await cartas.ProjectTo<DtoCarta>(AutoMapperHelper.DefaultConfiguration).ToListAsync().ConfigureAwait(false);
+            return await cartas.ProjectTo<DtoCarta>(AutoMapperHelper.DefaultConfiguration).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Planning.Pocker.Api.NoAuth.Dtos;
 using Planning.Pocker.Api.NoAuth.Handlers;
-using Planning.Pocker.Api.NoAuth.Model;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -22,7 +21,8 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [HttpGet]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoCarta>))]
-        public async Task<ActionResult<IEnumerable<DtoCarta>>> GetCarta([FromQuery] ListarCartasQuery listarCartas) => await mediator.Send(listarCartas).ConfigureAwait(false);
+        public async Task<ActionResult<IEnumerable<DtoCarta>>> GetCarta([FromQuery] ListarCartasQuery listarCartas)
+            => await mediator.Send(listarCartas).ConfigureAwait(false);
 
         // GET: api/Cartas/5
         [HttpGet("{id}")]
@@ -52,7 +52,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoCarta))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<Carta>> PostCarta([FromBody] CreateCartaCommand createCarta)
+        public async Task<ActionResult<DtoCarta>> PostCarta([FromBody] CreateCartaCommand createCarta)
         {
             var dtoCarta = await mediator.Send(createCarta).ConfigureAwait(false);
             return CreatedAtAction($"{nameof(CartasController.GetCarta)}", new { id = dtoCarta.Id }, dtoCarta);
@@ -62,6 +62,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteCarta(DeleteCartaCommand deleteCarta) => StatusCode(await mediator.Send(deleteCarta).ConfigureAwait(false));
+        public async Task<IActionResult> DeleteCarta([FromRoute] Guid id)
+            => StatusCode(await mediator.Send(new DeleteCartaCommand(id)).ConfigureAwait(false));
     }
 }

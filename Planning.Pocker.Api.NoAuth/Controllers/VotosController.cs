@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Planning.Pocker.Api.NoAuth;
 using Planning.Pocker.Api.NoAuth.Data;
+using Planning.Pocker.Api.NoAuth.Dtos;
+using Planning.Pocker.Api.NoAuth.Handlers;
 using Planning.Pocker.Api.NoAuth.Model;
 
 namespace Planning.Pocker.Api.NoAuth.Controllers
@@ -15,95 +18,56 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
     [ApiController]
     public class VotosController : ControllerBase
     {
-        private readonly ApiDbContext _context;
+        private readonly IMediator mediator;
 
-        public VotosController(ApiDbContext context)
-        {
-            _context = context;
-        }
+        public VotosController(IMediator mediator) => this.mediator = mediator;
 
         // GET: api/Votoes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Voto>>> GetVoto()
-        {
-            return await _context.Voto.ToListAsync();
-        }
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoVoto>))]
+        public async Task<ActionResult<IEnumerable<DtoVoto>>> GetVoto([FromQuery] ListarVotosQuery listarVotos) 
+            => await mediator.Send(listarVotos).ConfigureAwait(false);
 
         // GET: api/Votoes/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Voto>> GetVoto(Guid id)
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoVoto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DtoVoto>> GetVoto(Guid id)
         {
-            var voto = await _context.Voto.FindAsync(id);
-
-            if (voto == null)
-            {
-                return NotFound();
-            }
-
-            return voto;
+            var voto = await mediator.Send(new GetVotoQuery(id)).ConfigureAwait(false);
+            return voto is null ? NotFound() : voto;
         }
 
         // PUT: api/Votoes/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVoto(Guid id, Voto voto)
-        {
-            if (id != voto.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(voto).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!VotoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
+        [Consumes("application/json")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PutVoto([FromRoute] Guid validationId, UpdateVotoCommand updateVoto)
+            => StatusCode(await mediator.Send(updateVoto.SetValidationId(validationId)).ConfigureAwait(false));
 
         // POST: api/Votoes
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Voto>> PostVoto(Voto voto)
+        [Consumes("application/json")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DtoVoto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<DtoVoto>> PostVoto([FromBody] CreateVotoCommand createVoto)
         {
-            _context.Voto.Add(voto);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetVoto", new { id = voto.Id }, voto);
+            var dtoVoto = await mediator.Send(createVoto).ConfigureAwait(false);
+            return dtoVoto != null ? CreatedAtAction($"{nameof(VotosController.GetVoto)}", new { id = dtoVoto.Id }, dtoVoto) : BadRequest();
         }
 
         // DELETE: api/Votoes/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteVoto(Guid id)
-        {
-            var voto = await _context.Voto.FindAsync(id);
-            if (voto == null)
-            {
-                return NotFound();
-            }
-
-            _context.Voto.Remove(voto);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool VotoExists(Guid id)
-        {
-            return _context.Voto.Any(e => e.Id == id);
-        }
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteVoto([FromRoute] Guid id) 
+            => StatusCode(await mediator.Send(new DeleteVotoCommand(id)).ConfigureAwait(false));
     }
 }
