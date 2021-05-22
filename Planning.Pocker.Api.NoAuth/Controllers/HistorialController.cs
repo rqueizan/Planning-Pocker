@@ -1,5 +1,4 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Planning.Pocker.Api.NoAuth.Dtos;
 using Planning.Pocker.Api.NoAuth.Handlers;
@@ -12,18 +11,14 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HistorialController : ControllerBase
+    public class HistorialController : BaseController
     {
-        private readonly IMediator mediator;
-
-        public HistorialController(IMediator mediator) => this.mediator = mediator;
-
         // GET: api/Historial
         [HttpGet]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoHistorial>))]
         public async Task<ActionResult<IEnumerable<DtoHistorial>>> GetHistorial([FromQuery] ListarHistorialesQuery listarHistorial)
-            => await mediator.Send(listarHistorial).ConfigureAwait(false);
+            => await Mediator.Send(listarHistorial).ConfigureAwait(false);
 
         // GET: api/Historial/5
         [HttpGet("{id}")]
@@ -32,7 +27,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<DtoHistorial>> GetHistorial(Guid id)
         {
-            var historial = await mediator.Send(new GetHistorialQuery(id)).ConfigureAwait(false);
+            var historial = await Mediator.Send(new GetHistorialQuery(id)).ConfigureAwait(false);
             return historial is null ? NotFound() : historial;
         }
 
@@ -44,7 +39,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutHistorialUsuario([FromRoute] Guid validationId, UpdateHistorialCommand updateHistorial)
-                => StatusCode(await mediator.Send(updateHistorial.SetValidationId(validationId)).ConfigureAwait(false));
+                => StatusCode(await Mediator.Send(updateHistorial.SetValidationId(validationId)).ConfigureAwait(false));
 
         // POST: api/Historial
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -55,7 +50,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<DtoHistorial>> PostHistorialUsuario([FromBody] CreateHistorialCommand createHistorial)
         {
-            var dtoHistorial = await mediator.Send(createHistorial).ConfigureAwait(false);
+            var dtoHistorial = await Mediator.Send(createHistorial).ConfigureAwait(false);
             return CreatedAtAction($"{nameof(HistorialController.GetHistorial)}", new { id = dtoHistorial.Id }, dtoHistorial);
         }
 
@@ -64,6 +59,6 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteHistorial([FromRoute] Guid id)
-            => StatusCode(await mediator.Send(new DeleteHistorialCommand(id)).ConfigureAwait(false));
+            => StatusCode(await Mediator.Send(new DeleteHistorialCommand(id)).ConfigureAwait(false));
     }
 }

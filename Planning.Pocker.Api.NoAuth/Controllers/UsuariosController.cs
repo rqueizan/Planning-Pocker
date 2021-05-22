@@ -1,5 +1,4 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Planning.Pocker.Api.NoAuth.Dtos;
 using Planning.Pocker.Api.NoAuth.Handlers;
@@ -12,18 +11,14 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsuariosController : ControllerBase
+    public class UsuariosController : BaseController
     {
-        private readonly IMediator mediator;
-
-        public UsuariosController(IMediator mediator) => this.mediator = mediator;
-
         // GET: api/Usuarios
         [HttpGet]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoUsuario>))]
         public async Task<ActionResult<IEnumerable<DtoUsuario>>> GetUsuario([FromQuery] ListarUsuariosQuery listarUsuario)
-            => await mediator.Send(listarUsuario).ConfigureAwait(false);
+            => await Mediator.Send(listarUsuario).ConfigureAwait(false);
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
@@ -32,7 +27,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<DtoUsuario>> GetUsuario(Guid id)
         {
-            var usuario = await mediator.Send(new GetUsuarioQuery(id)).ConfigureAwait(false);
+            var usuario = await Mediator.Send(new GetUsuarioQuery(id)).ConfigureAwait(false);
             return usuario is null ? NotFound() : usuario;
         }
 
@@ -44,7 +39,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutUsuario([FromRoute] Guid validationId, UpdateUsuarioCommand updateUsuario)
-            => StatusCode(await mediator.Send(updateUsuario.SetValidationId(validationId)).ConfigureAwait(false));
+            => StatusCode(await Mediator.Send(updateUsuario.SetValidationId(validationId)).ConfigureAwait(false));
 
         // POST: api/Usuarios
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -55,7 +50,7 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<DtoUsuario>> PostUsuario([FromBody] CreateUsuarioCommand createUsuario)
         {
-            var dtoUsuario = await mediator.Send(createUsuario).ConfigureAwait(false);
+            var dtoUsuario = await Mediator.Send(createUsuario).ConfigureAwait(false);
             return CreatedAtAction($"{nameof(UsuariosController.GetUsuario)}", new { id = dtoUsuario.Id }, dtoUsuario);
         }
 
@@ -64,6 +59,6 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUsuario([FromRoute] Guid id)
-            => StatusCode(await mediator.Send(new DeleteUsuarioCommand(id)).ConfigureAwait(false));
+            => StatusCode(await Mediator.Send(new DeleteUsuarioCommand(id)).ConfigureAwait(false));
     }
 }
