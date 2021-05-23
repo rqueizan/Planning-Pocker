@@ -40,7 +40,6 @@ namespace Planning.Pocker.Api.NoAuth
                 {
                     options.RequireHttpsPermanent = true;
                     options.Filters.Add(typeof(GlobalExceptionFilter));
-                    //options.Filters.Add(new TrackPerformanceFilter("LPM", "API"));
                     //options.ModelBinderProviders.Insert(0, new AppModelBinder());
                 })
                 .AddJsonOptions(options =>
