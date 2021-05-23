@@ -1,7 +1,5 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using FluentValidation.AspNetCore;
-using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -10,12 +8,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Planning.Pocker.Api.NoAuth.Behavior;
 using Planning.Pocker.Api.NoAuth.Controllers;
 using Planning.Pocker.Api.NoAuth.Data;
-using Planning.Pocker.Api.NoAuth.Handlers;
+using Planning.Pocker.Api.NoAuth.Filters;
 using System;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Planning.Pocker.Api.NoAuth
 {
@@ -33,20 +32,31 @@ namespace Planning.Pocker.Api.NoAuth
         {
             services.AddApplicationInsightsTelemetry();
             services.AddAutoMapper(typeof(Startup));
-            services.AddMediatR(typeof(Startup));
-            //services.AddScoped(typeof(LoggingBehavior<,>), typeof(IPipelineBehavior<,>));
-            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidatorBehavior<,>));
-            services.AddMvc().AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CreateCartaValidator>());
             services.AddControllers();
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "Planning Pocker Api NoAuth", Version = "v1" }));
             services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest).AddControllersAsServices();
-            var builder = new ContainerBuilder();
-            builder.Populate(services);
-            var controllersTypesInAssembly = typeof(Startup).Assembly.ExportedTypes
-                .Where(type => typeof(BaseController).IsAssignableFrom(type)).ToArray();
-            builder.RegisterTypes(controllersTypesInAssembly).PropertiesAutowired();
-            return new AutofacServiceProvider(builder.Build());
+            services
+                .AddMvc(options =>
+                {
+                    options.RequireHttpsPermanent = true;
+                    options.Filters.Add(typeof(GlobalExceptionFilter));
+                    //options.Filters.Add(new TrackPerformanceFilter("LPM", "API"));
+                    //options.ModelBinderProviders.Insert(0, new AppModelBinder());
+                })
+                .AddJsonOptions(options =>
+                {
+                    //options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+                    //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    //options.JsonSerializerOptions.WriteIndented = true;
+                    options.JsonSerializerOptions.PropertyNamingPolicy = null;//JsonNamingPolicy.CamelCase;
+                })
+                .SetCompatibilityVersion(CompatibilityVersion.Latest).AddControllersAsServices();
+            var containerBuilder = new ContainerBuilder();
+            containerBuilder.Populate(services);
+            containerBuilder.RegisterModule(new MediatorModule());
+            var controllersTypesInAssembly = typeof(Startup).Assembly.ExportedTypes.Where(type => typeof(BaseController).IsAssignableFrom(type)).ToArray();
+            containerBuilder.RegisterTypes(controllersTypesInAssembly).PropertiesAutowired();
+            return new AutofacServiceProvider(containerBuilder.Build());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

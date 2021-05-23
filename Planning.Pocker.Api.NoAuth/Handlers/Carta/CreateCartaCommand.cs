@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 
 namespace Planning.Pocker.Api.NoAuth.Handlers
 {
+    //[ModelBinder(typeof(FileFormDataModelBinder), Name = "json")]
     [DataContract]
     public class CreateCartaCommand : IRequest<DtoCarta>
     {

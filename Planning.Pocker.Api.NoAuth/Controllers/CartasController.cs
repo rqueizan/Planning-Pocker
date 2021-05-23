@@ -18,7 +18,11 @@ namespace Planning.Pocker.Api.NoAuth.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DtoCarta>))]
         public async Task<ActionResult<IEnumerable<DtoCarta>>> GetCarta([FromQuery] ListarCartasQuery listarCartas)
-            => await Mediator.Send(listarCartas).ConfigureAwait(false);
+        {
+            var y = 0;
+            var x = 5 / y;
+            return await Mediator.Send(listarCartas).ConfigureAwait(false);
+        }
 
         // GET: api/Cartas/5
         [HttpGet("{id}")]
